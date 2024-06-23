@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Record Audio</title>
+</head>
+<body>
+    <h1>Record Audio</h1>
+    <button onclick="startRecording()">Start Recording</button>
+    <button onclick="stopRecording()">Stop Recording</button>
+    <h2>Recording Status: <span id="status">Inactive</span></h2>
+    <script>
+        let mediaRecorder;
+        let recordedBlobs;
+
+        function startRecording() {
+            navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+                .then(stream => {
+                    recordedBlobs = [];
+                    mediaRecorder = new MediaRecorder(stream);
+                    mediaRecorder.ondataavailable = event => {
+                        if (event.data && event.data.size > 0) {
+                            recordedBlobs.push(event.data);
+                        }
+                    };
+                    mediaRecorder.start();
+                    document.getElementById('status').innerText = 'Recording...';
+                });
+        }
+
+        function stopRecording() {
+            mediaRecorder.stop();
+            document.getElementById('status').innerText = 'Stopped';
+            uploadRecording();
+        }
+
+        function uploadRecording() {
+            const blob = new Blob(recordedBlobs, { type: 'video/mp4' });
+            const formData = new FormData();
+            formData.append('file', blob, 'recording.mp4');
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            }).then(response => response.json())
+              .then(data => console.log(data));
+        }
+    </script>
+</body>
+</html>
+    
