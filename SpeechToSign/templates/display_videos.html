@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Sign Language Videos</title>
+</head>
+<body>
+  <h1>Sign Language Videos</h1>
+  <div id="videos"></div>
+  <script>
+    const videosDiv = document.getElementById('videos');
+    const videoUrls = JSON.parse(localStorage.getItem('video_urls')) || [];
+    
+    videoUrls.forEach(item => {
+      const videoWrapper = document.createElement('div');
+      const wordElement = document.createElement('p');
+      wordElement.innerText = item.word;
+      const videoElement = document.createElement('video');
+      videoElement.width = 320;
+      videoElement.height = 240;
+      videoElement.controls = true;
+      const sourceElement = document.createElement('source');
+      sourceElement.src = item.url;
+      sourceElement.type = 'video/mp4';
+      videoElement.appendChild(sourceElement);
+      videoWrapper.appendChild(wordElement);
+      videoWrapper.appendChild(videoElement);
+      videosDiv.appendChild(videoWrapper);
+    });
+  </script>
+</body>
+</html>

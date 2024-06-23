@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Record Audio</title>
+  <style>
+    #word { font-size: 24px; font-weight: bold; margin-bottom: 10px; text-align: center; }
+    #sign-video {
+      display: block;
+      margin: 0 auto;
+      width: 640px;
+      height: 480px;
+    }
+  </style>
+</head>
+<body>
+  <h1 style="text-align: center;">Record Audio and Video</h1>
+  <button id="record" style="display: block; margin: 0 auto;">Start Recording</button>
+  <button id="stop" disabled style="display: block; margin: 10px auto;">Stop Recording</button>
+  <p id="status" style="text-align: center;"></p>
+  <div id="word"></div>
+  <video id="sign-video" controls></video>
+  <script>
+    let mediaRecorder;
+    let recordedBlobs;
+    const recordButton = document.getElementById('record');
+    const stopButton = document.getElementById('stop');
+    const statusText = document.getElementById('status');
+    const signVideo = document.getElementById('sign-video');
+    const wordDisplay = document.getElementById('word');
+    let videoQueue = [];
+
+    recordButton.onclick = () => {
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(stream => {
+          recordedBlobs = [];
+          mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+          mediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+              recordedBlobs.push(event.data);
+            }
+          };
+          mediaRecorder.start();
+          statusText.innerText = 'Recording...';
+          recordButton.disabled = true;
+          stopButton.disabled = false;
+        })
+        .catch(error => {
+          console.error('Error accessing media devices.', error);
+        });
+    };
+
+    stopButton.onclick = () => {
+      mediaRecorder.stop();
+      statusText.innerText = 'Stopped';
+      stopButton.disabled = true;
+      recordButton.disabled = false;
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(recordedBlobs, { type: 'audio/webm' });
+        const formData = new FormData();
+        formData.append('file', blob, 'recording.webm');
+
+        fetch('/upload', {
+          method: 'POST',
+          body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+          videoQueue = data.video_urls;
+          playNextVideo();
+        })
+        .catch(error => {
+          console.error('Error during fetch:', error);
+          statusText.innerText = 'Error uploading and transcribing';
+        });
+      };
+    };
+
+    function playNextVideo() {
+      if (videoQueue.length > 0) {
+        const { word, url } = videoQueue.shift();
+        wordDisplay.innerText = word;
+        signVideo.src = url;
+        signVideo.play();
+        signVideo.onended = playNextVideo;
+      } else {
+        wordDisplay.innerText = '';
+        signVideo.src = '';
+      }
+    }
+  </script>
+</body>
+</html>
