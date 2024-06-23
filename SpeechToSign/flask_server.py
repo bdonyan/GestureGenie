@@ -1,13 +1,14 @@
+import os
 from flask import Flask, request, render_template, jsonify
 from pydub import AudioSegment
 import requests
-import os
 import string
 from bs4 import BeautifulSoup
 
 app = Flask(__name__)
 
-OPENAI_API_KEY = ''
+OPENAI_API_KEY = 'use your own Open API key'
+HUME_API_KEY = 'use your Hume API key'
 
 def transcribe_audio(file_path):
     headers = {
@@ -26,6 +27,19 @@ def transcribe_audio(file_path):
         return response_json['text']
     else:
         return response_json  # Return the entire response if 'text' is not found for debugging
+
+def analyze_tone(file_path):
+    headers = {
+        'Authorization': f'Bearer {HUME_API_KEY}'
+    }
+    files = {
+        'audio': open(file_path, 'rb')
+    }
+    response = requests.post('https://api.hume.ai/v1/analysis', headers=headers, files=files)
+    response_json = response.json()
+    print("Hume API response:", response_json)  # Debugging statement
+    tones = response_json.get('tones', [])
+    return tones[0] if tones else None  # Assuming the first tone is the most dominant
 
 @app.route('/')
 def index():
@@ -51,6 +65,10 @@ def upload_file():
             wav_path = file_path
         
         text = transcribe_audio(wav_path)
+        tones = analyze_tone(wav_path)
+        print("Detected tones:", tones)  # Debugging statement
+        tone = tones[0] if tones else None  # Assuming the first tone is the most dominant
+        
         words = preprocess_text(text)
         video_urls = []
         for word in words:
@@ -64,10 +82,11 @@ def upload_file():
             else:
                 video_urls.append({"word": word, "url": video_url})
         
-        return jsonify({"video_urls": video_urls})
+        return jsonify({"video_urls": video_urls, "tone": tone})
 
 def preprocess_text(text):
     text = text.translate(str.maketrans('', '', string.punctuation))
+    text = text.lower()
     words = text.split()
     return words
 
@@ -86,7 +105,7 @@ def get_sign_video_url(word):
         if search_results:
             first_link = search_results.find('a')
             if first_link:
-                link_url = f"https://www.signingsavvy.com/{first_link['href']}"
+                link_url = f"https://www.signingsavvy.com{first_link['href']}"
                 sub_response = requests.get(link_url)
                 print(f"Accessing first link for {word} at {link_url}")  # Debugging statement
                 if sub_response.status_code == 200:
@@ -98,8 +117,7 @@ def get_sign_video_url(word):
                         return video_url
     return None
 
-if not os.path.exists('uploads'):
-    os.makedirs('uploads')
-
 if __name__ == '__main__':
+    if not os.path.exists('uploads'):
+        os.makedirs('uploads')
     app.run(host='0.0.0.0', port=5000)
