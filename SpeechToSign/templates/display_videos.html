@@ -1,31 +1,129 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Sign Language Videos</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Record Audio and Video</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+        header {
+            background-color: #333;
+            padding: 20px;
+        }
+        header img {
+            width: 50px;
+            height: 50px;
+            vertical-align: middle;
+        }
+        header nav {
+            display: inline-block;
+            vertical-align: middle;
+        }
+        header nav a {
+            color: white;
+            text-decoration: none;
+            margin: 0 15px;
+            font-size: 1.2em;
+        }
+        h1 {
+            margin-top: 50px;
+            font-size: 2.5em;
+            color: #333;
+        }
+        #record, #stop {
+            font-size: 1.2em;
+            padding: 10px 20px;
+            margin: 20px;
+            background-color: #333;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #stop:disabled {
+            background-color: #ccc;
+        }
+        #status {
+            font-size: 1.5em;
+            margin: 20px 0;
+        }
+        video {
+            width: 80%;
+            max-width: 640px;
+            margin: 20px auto;
+            display: block;
+            background-color: #000;
+        }
+    </style>
 </head>
 <body>
-  <h1>Sign Language Videos</h1>
-  <div id="videos"></div>
-  <script>
-    const videosDiv = document.getElementById('videos');
-    const videoUrls = JSON.parse(localStorage.getItem('video_urls')) || [];
-    
-    videoUrls.forEach(item => {
-      const videoWrapper = document.createElement('div');
-      const wordElement = document.createElement('p');
-      wordElement.innerText = item.word;
-      const videoElement = document.createElement('video');
-      videoElement.width = 320;
-      videoElement.height = 240;
-      videoElement.controls = true;
-      const sourceElement = document.createElement('source');
-      sourceElement.src = item.url;
-      sourceElement.type = 'video/mp4';
-      videoElement.appendChild(sourceElement);
-      videoWrapper.appendChild(wordElement);
-      videoWrapper.appendChild(videoElement);
-      videosDiv.appendChild(videoWrapper);
-    });
-  </script>
+    <header>
+        <img src="logo.png" alt="Logo">
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="menu.html">Menu</a>
+            <a href="about.html">About</a>
+            <a href="contact.html">Contact</a>
+        </nav>
+    </header>
+
+    <h1>Record Audio and Video</h1>
+    <button id="record">Start Recording</button>
+    <button id="stop" disabled>Stop Recording</button>
+    <p id="status">Waiting for audio...</p>
+    <video id="sign-video" controls></video>
+
+    <script>
+        let mediaRecorder;
+        let recordedBlobs;
+        const recordButton = document.getElementById('record');
+        const stopButton = document.getElementById('stop');
+        const statusText = document.getElementById('status');
+        const signVideo = document.getElementById('sign-video');
+
+        recordButton.onclick = async () => {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+            recordedBlobs = [];
+            mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    recordedBlobs.push(event.data);
+                }
+            };
+
+            mediaRecorder.start();
+            statusText.textContent = 'Recording...';
+            recordButton.disabled = true;
+            stopButton.disabled = false;
+        };
+
+        stopButton.onclick = () => {
+            mediaRecorder.stop();
+            statusText.textContent = 'Stopped';
+            stopButton.disabled = true;
+            recordButton.disabled = false;
+
+            mediaRecorder.onstop = async () => {
+                const blob = new Blob(recordedBlobs, { type: 'video/webm' });
+                const formData = new FormData();
+                formData.append('file', blob, 'recording.webm');
+
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                const videoUrl = data.video_urls[0].url; // Assuming the response contains video URLs
+                signVideo.src = videoUrl;
+                signVideo.play();
+            };
+        };
+    </script>
 </body>
 </html>
