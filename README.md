@@ -1,5 +1,5 @@
 # Gesture Genie
-
+![image](https://github.com/bdonyan/GestureGenie/assets/66976326/096dd2d0-5a58-4cc9-b910-91c0835c3f8b)
 ## Overview
 
 Gesture Genie is a web application that bridges the gap between the deaf and hearing communities by translating spoken language into American Sign Language (ASL) using real-time video and tone detection. Additionally, the application offers sign-to-speech functionality, translating ASL gestures into spoken language using computer vision techniques.
