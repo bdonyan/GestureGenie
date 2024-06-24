@@ -1,8 +1,8 @@
-# Gesture Genius
+# Gesture Genie
 
 ## Overview
 
-Gesture Genius is a web application that bridges the gap between the deaf and hearing communities by translating spoken language into American Sign Language (ASL) using real-time video and tone detection.
+Gesture Genie is a web application that bridges the gap between the deaf and hearing communities by translating spoken language into American Sign Language (ASL) using real-time video and tone detection. Additionally, the application offers sign-to-speech functionality, translating ASL gestures into spoken language using computer vision techniques.
 
 ## Features
 
@@ -12,6 +12,7 @@ Gesture Genius is a web application that bridges the gap between the deaf and he
   - Blue: Sad
   - Yellow: Happy
   - Green: Neutral
+- **Sign-to-Speech Translation:** Uses computer vision to detect and interpret ASL gestures, translating them into spoken language.
 
 ## Getting Started
 
@@ -23,23 +24,25 @@ Gesture Genius is a web application that bridges the gap between the deaf and he
 - BeautifulSoup4
 - pydub
 - Hume API access
+- MediaPipe
+- OpenCV
 
 ### Installation
 
 1. Clone the repository:
-    ```sh
+    ```bash
     git clone https://github.com/bdonyan/GestureGenie.git
     cd GestureGenie
     ```
 
 2. Create a virtual environment:
-    ```sh
+    ```bash
     python3 -m venv venv
     source venv/bin/activate
     ```
 
 3. Install the required packages:
-    ```sh
+    ```bash
     pip install -r requirements.txt
     ```
 
@@ -52,18 +55,27 @@ Gesture Genius is a web application that bridges the gap between the deaf and he
 ### Running the Application
 
 1. Start the Flask server:
-    ```sh
+    ```bash
     python flask_server.py
     ```
 
-2. Open your web browser and navigate to `http://127.0.0.1:5000` to use the application.
+2. Open your web browser and navigate to [http://127.0.0.1:5000](http://127.0.0.1:5000) to use the application.
 
 ## Usage
+
+### Speech to Sign
 
 1. On the homepage, click on "Try Now" to start recording.
 2. Click "Start Recording" to record your audio.
 3. Click "Stop Recording" to stop and upload the audio.
 4. The application will process the audio, translate it to ASL, and display the corresponding ASL video. The background color will change based on the tone detected.
+
+### Sign to Speech
+
+1. Navigate to the "Sign to Speech" section of the application.
+2. Ensure your webcam is connected and click "Start Detection".
+3. Perform ASL gestures in front of the camera.
+4. The application will detect and interpret the gestures, translating them into spoken language which will be displayed on the screen.
 
 ## Contributing
 
